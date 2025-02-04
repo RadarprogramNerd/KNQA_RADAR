@@ -1,0 +1,6 @@
+Flask
+matplotlib
+numpy
+pyart
+fsspec
+boto3
