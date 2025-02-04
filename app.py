@@ -1,12 +1,8 @@
-from flask import Flask, render_template, send_file
 import matplotlib.pyplot as plt
 import pyart
 import numpy as np
 import fsspec
 from datetime import datetime, timezone
-import io
-
-app = Flask(__name__)
 
 def download_latest_nexrad(site):
     """Download the latest NEXRAD radar data from an S3 bucket."""
@@ -22,6 +18,7 @@ def download_latest_nexrad(site):
                 return file
         return None
     except Exception as e:
+        print(f"Error in processing: {e}")
         return None
 
 def plot_radar(file):
@@ -47,20 +44,13 @@ def plot_radar(file):
         gdisplay.plot_maxcappi(
             field="reflectivity", cmap="pyart_HomeyerRainbow", add_slogan=True, ax=ax
         )
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        buf.seek(0)
-        return buf
+        plt.savefig('radar.png')
+        plt.close()
 
-@app.route('/')
-def index():
+if __name__ == "__main__":
     site = "KNQA"
     file = download_latest_nexrad(site)
     if file:
-        buf = plot_radar(file)
-        return send_file(buf, mimetype='image/png', as_attachment=False, attachment_filename='radar.png')
+        plot_radar(file)
     else:
-        return "No radar file found."
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        print("No radar file found.")
